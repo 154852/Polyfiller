@@ -1,0 +1,30 @@
+body {
+    font-family: 'Montserrat', sans-serif;
+    margin: 0 10%;
+}
+
+a {
+    display: inline-block;
+    background-color: #8E44AD;
+    padding: 0.5em 3em;
+
+    color: white;
+    text-decoration: none;
+
+    transition: 0.4s;
+    -webkit-transition: 0.4s;
+}
+
+a:hover {
+    background-color: #BB8FCE;
+}
+
+code {
+    background-color: lightgray;
+    padding: 0.1em 0.5em;
+    border-radius: 0.5em;
+}
+
+ol {
+    padding-left: 0;
+}
