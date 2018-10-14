@@ -296,7 +296,7 @@ class LowPolyGenerator {
         this.sides = 3;
         
         this.addEventListener('keydown', function(event) {
-            this.largeAlert('Key Down: <b>' + event.key.toUpperCase() + '</b>', 500);
+            this.largeAlert('Key Down: <b>' + event.key.toUpperCase() + '</b>');
 
             if (event.keyCode == 81) { 
                 this.pointLocked = !this.pointLocked;
@@ -452,21 +452,21 @@ class LowPolyGenerator {
 
         this.addEventListener('keyup', function(event) {
             if (event.keyCode == 16) {
-                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>', 1000);
+                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>');
                 this.alert('Click to delete disabled');
 
                 this.deleteMode = false;
             }
 
             if (event.keyCode == 9) {
-                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>', 1000);
+                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>');
 
                 this.insertMode = false;
                 this.alert('Click to insert point disabled');
             }
 
             if (event.keyCode == 82) {
-                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>', 1000);
+                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>');
 
                 this.recolorMode = false;
                 this.alert('Click to re-color disabled');
