@@ -240,9 +240,10 @@ function sleep(ms) {
 }
 
 class Animation {
-    constructor(polygons) {
+    constructor(polygons, speed, endCallback) {
         this.polygons = polygons;
-        this.speed = 50;
+        this.speed = speed;
+        this.endCallback = endCallback;
     }
 
     async show(ctx, width, height) {
@@ -255,6 +256,8 @@ class Animation {
 
             await sleep(this.speed);
         }
+
+        if (this.endCallback != null) this.endCallback.call();
     }
 }
 
@@ -317,6 +320,9 @@ class LowPolyGenerator {
         this.keyTooltips = false;
 
         this.sides = 3;
+
+        this.animation = false;
+        this.animationSpeed = 40;
         
         this.addEventListener('keydown', function(event) {
             this.largeAlert('Key Down: <b>' + event.key.toUpperCase() + '</b>');
@@ -473,7 +479,21 @@ class LowPolyGenerator {
             }
 
             if (event.keyCode == 75) {
-                this.genAnimation().show(this.ctx, this.canvas.width, this.canvas.height);
+                const animation = this.genAnimation();
+                if (animation != null) {
+                    animation.show(this.ctx, this.canvas.width, this.canvas.height);
+                    this.alert('Started animation');
+                }
+            }
+
+            if (event.keyCode == 74) {
+                this.animationSpeed += 5;
+                this.alert('Set animation speed to ' + this.animationSpeed);
+            }
+
+            if (event.keyCode == 72) {
+                this.animationSpeed = Math.max(0, this.animationSpeed - 5);
+                this.alert('Set animation speed to ' + this.animationSpeed);
             }
         });
 
@@ -634,7 +654,17 @@ class LowPolyGenerator {
     }
 
     genAnimation() {
-        return new Animation(this.polygons);
+        if (this.animation) {
+            this.alert('<span style="color: #E74C3C">Error:</span> Animation already playing.', 2000);
+            // alert('ok')
+            return;
+        }
+        this.animation = true;
+
+        const self = this;
+        return new Animation(this.polygons, this.animationSpeed, function() {
+            self.animation = false;
+        });
     }
 
     getExisting() {
@@ -705,6 +735,8 @@ class LowPolyGenerator {
 
         this.alertNode.innerHTML = text;
         this.alertNode.style.opacity = '1';
+
+        console.log(this.alertNode)
 
         if (this.alertTransition != null) {
             window.clearTimeout(this.alertTransition);
