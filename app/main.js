@@ -290,6 +290,8 @@ class LowPolyGenerator {
         this.deleteMode = false;
         this.insertMode = false;
         this.recolorMode = false;
+
+        this.sides = 3;
         
         this.addEventListener('keydown', function(event) {
             if (event.keyCode == 81) { 
@@ -388,12 +390,13 @@ class LowPolyGenerator {
                 this.delete();
             }
 
-            if (event.keyCode == 73) {
-                this.alert('Size: <b>' + this.width + 'px</b> * <b>' + this.height + 'px</b>' + 
+            if (event.keyCode == 73) { // Display info
+                this.alert('Size: <b>' + this.width + '</b>px * <b>' + this.height + '</b>px' + 
                             '<br />Load index: <b>' + this.load + '</b>' + 
                             '<br />Polygons: <b>' + this.polygons.length + '</b>' + 
                             '<br />Active color: <b>' + this.color.toString() + '</b>' + 
-                            '<br />Color randomisation degree: <b>' + this.colorRandomisation + '</b>',
+                            '<br />Color randomisation degree: <b>' + this.colorRandomisation + '</b>' +
+                            '<br />Sides per polygon: <b>' + this.sides + '<b>',
                             7500
                 );
             }
@@ -408,6 +411,18 @@ class LowPolyGenerator {
             if (event.keyCode == 82) {
                 this.recolorMode = true;
                 this.alert('Click to re-color');
+            }
+
+            if (event.keyCode == 187) {
+                this.sides += 1;
+
+                this.alert('Set sides count to ' + this.sides);
+            }
+
+            if (event.keyCode == 189) {
+                this.sides = Math.max(3, this.sides - 1);
+
+                this.alert('Set sides count to ' + this.sides);
             }
         });
 
@@ -452,7 +467,7 @@ class LowPolyGenerator {
                     if (polygon.intersects(point)) {
                         this.polygons.splice(i, 1);
 
-                        for (var i = 0; i < 3; i++) {
+                        for (var i = 0; i < polygon.points.length; i++) {
                             const newPolygon = new Polygon(this.color.randomise(this.colorRandomisation));
 
                             newPolygon.points.push(polygon.points[i]);
@@ -504,9 +519,16 @@ class LowPolyGenerator {
                 }
             }
 
-            this.polygonInProgress.nextPoint(point);
+            if (event.button == 2) {
+                event.preventDefault();
 
-            if (this.polygonInProgress.isTriangle()) {
+                this.polygons.push(this.polygonInProgress.toPolygon());
+                this.polygonInProgress = new SemiPolygon(this.color.randomise(this.colorRandomisation));
+            } else {
+                this.polygonInProgress.nextPoint(point);
+            }
+
+            if (this.polygonInProgress.points.length == this.sides || event.button == 2) {
                 this.polygons.push(this.polygonInProgress.toPolygon());
                 this.polygonInProgress = new SemiPolygon(this.color.randomise(this.colorRandomisation));
             }
@@ -514,6 +536,10 @@ class LowPolyGenerator {
             this.save();
             this.render();
         }, this.canvas);
+
+        this.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        })
 
         this.addEventListener('mousemove', function(event) {
             const point = this.convertPoint(event);
