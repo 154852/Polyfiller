@@ -460,9 +460,9 @@ class LowPolyGenerator {
             }
 
             if (event.keyCode == 68) {
-                window.open('fb.html?i=' + this.canvas.toDataURL('image/png'), '_blank');
-                // newTab.document.body.style.backgroundColor = 'black';
-                // newTab.document.body.innerHTML = '<img src="' + this.canvas.toDataURL('image/png') + '" width="' + this.width + 'px" height="' + this.height + 'px">';
+                const newTab = window.open();
+                newTab.document.body.style.backgroundColor = 'black';
+                newTab.document.body.innerHTML = '<img src="' + this.canvas.toDataURL('image/png') + '" width="' + this.width + 'px" height="' + this.height + 'px">';
             }
 
             if (event.keyCode == 89) { 
