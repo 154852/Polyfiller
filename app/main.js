@@ -289,6 +289,7 @@ class LowPolyGenerator {
 
         this.deleteMode = false;
         this.insertMode = false;
+        this.recolorMode = false;
         
         this.addEventListener('keydown', function(event) {
             if (event.keyCode == 81) { 
@@ -403,6 +404,11 @@ class LowPolyGenerator {
 
                 event.preventDefault();
             }
+
+            if (event.keyCode == 82) {
+                this.recolorMode = true;
+                this.alert('Click to re-color');
+            }
         });
 
         this.addEventListener('keyup', function(event) {
@@ -416,10 +422,29 @@ class LowPolyGenerator {
                 this.insertMode = false;
                 this.alert('Click to insert point disabled');
             }
+
+            if (event.keyCode == 82) {
+                this.recolorMode = false;
+                this.alert('Click to re-color disabled');
+            }
         });
 
         this.addEventListener('mousedown', function(event) {
             const point = this.convertPoint(event);
+
+            if (this.recolorMode) {
+                for (var i = this.polygons.length - 1; i >= 0; i--) {
+                    const polygon = this.polygons[i];
+                    if (polygon.intersects(point)) {
+                        polygon.color = this.color.randomise(this.colorRandomisation);
+
+                        this.render();
+                        this.save();
+                        break;
+                    }
+                }
+                return;
+            }
 
             if (this.insertMode) {
                 for (var i = this.polygons.length - 1; i >= 0; i--) {
