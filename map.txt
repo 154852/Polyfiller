@@ -1,3 +1,2 @@
 https://polyfiller.netlify.com/
 https://polyfiller.netlify.com/index.html
-https://polyfiller.netlify.com/app.html
