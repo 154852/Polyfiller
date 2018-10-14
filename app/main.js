@@ -16,6 +16,7 @@ function genAlertNode() {
     element.style.fontSize = '80%';
     element.style.transition = 'opacity 0.7s';
     element.style.webkitTransition = element.style.transition;
+    element.style.userSelect = 'none';
 
     element.style.opacity = '0';
 
@@ -280,13 +281,14 @@ class LowPolyGenerator {
         this.polygonInProgress = new SemiPolygon(this.color.randomise(this.colorRandomisation));
 
         this.pointLocked = false;
-        this.crossSize = 5 * this.scale;
-        this.lockDistance = 10 * this.scale;
+        this.crossSize = 3 * this.scale;
+        this.lockDistance = 15 * this.scale;
 
         this.moving = false;
         this.movingPoints = [];
 
         this.deleteMode = false;
+        this.insertMode = false;
         
         this.addEventListener('keydown', function(event) {
             if (event.keyCode == 81) { 
@@ -394,6 +396,13 @@ class LowPolyGenerator {
                             7500
                 );
             }
+
+            if (event.keyCode == 9) {
+                this.insertMode = true;
+                this.alert('Click to insert point inside polygon');
+
+                event.preventDefault();
+            }
         });
 
         this.addEventListener('keyup', function(event) {
@@ -402,10 +411,39 @@ class LowPolyGenerator {
 
                 this.deleteMode = false;
             }
+
+            if (event.keyCode == 9) {
+                this.insertMode = false;
+                this.alert('Click to insert point disabled');
+            }
         });
 
         this.addEventListener('mousedown', function(event) {
             const point = this.convertPoint(event);
+
+            if (this.insertMode) {
+                for (var i = this.polygons.length - 1; i >= 0; i--) {
+                    const polygon = this.polygons[i];
+                    if (polygon.intersects(point)) {
+                        this.polygons.splice(i, 1);
+
+                        for (var i = 0; i < 3; i++) {
+                            const newPolygon = new Polygon(this.color.randomise(this.colorRandomisation));
+
+                            newPolygon.points.push(polygon.points[i]);
+                            newPolygon.points.push(polygon.points[(i + 1) % polygon.points.length]);
+                            newPolygon.points.push(point);
+
+                            this.polygons.push(newPolygon);
+                        }
+
+                        this.render();
+                        this.save();
+                        break;
+                    }
+                }
+                return;
+            }
 
             if (this.deleteMode) {
                 for (var i = this.polygons.length - 1; i >= 0; i--) {
@@ -414,7 +452,7 @@ class LowPolyGenerator {
                         this.polygons.splice(i, 1);
                         this.render();
                         this.save();
-                        return;
+                        break;
                     }
                 }
                 return;
