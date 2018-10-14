@@ -393,7 +393,6 @@ class LowPolyGenerator {
             if (event.keyCode == 65) {
                 this.moving = !this.moving;
                 this.alert((this.moving? 'Enabled':'Disabled') + ' move mode');
-                this.pointLocked = this.moving;
 
                 this.render();
             }
@@ -656,7 +655,6 @@ class LowPolyGenerator {
     genAnimation() {
         if (this.animation) {
             this.alert('<span style="color: #E74C3C">Error:</span> Animation already playing.', 2000);
-            // alert('ok')
             return;
         }
         this.animation = true;
@@ -736,8 +734,6 @@ class LowPolyGenerator {
         this.alertNode.innerHTML = text;
         this.alertNode.style.opacity = '1';
 
-        console.log(this.alertNode)
-
         if (this.alertTransition != null) {
             window.clearTimeout(this.alertTransition);
         }
@@ -773,7 +769,7 @@ class LowPolyGenerator {
 
         this.polygonInProgress.render(this.ctx);
 
-        if (this.pointLocked) {
+        if (this.pointLocked || this.moving) {
             for (const point of this.getAllPoints()) point.renderCross(this.ctx, this.crossSize);
         }
     }
