@@ -765,6 +765,8 @@ class LowPolyGenerator {
     }
 
     render() {
+        if (this.animation) return;
+
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         for (const polygon of this.polygons) polygon.render(this.ctx);
