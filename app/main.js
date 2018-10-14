@@ -55,6 +55,15 @@ function download(data, type, name) {
     document.body.removeChild(dlLink);
 }
 
+function getParameterByName(name) {
+	name = name.replace(/[\[\]]/g, "\\$&");
+	var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+ 	results = regex.exec(window.location.href);
+	if (!results) return null;
+	if (!results[2]) return '';
+	return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
 class Polygon {
     constructor(color, points) {
         this.color = color;
@@ -177,6 +186,14 @@ class Point {
     isOrigin() {
         return this.x == 0 && this.y == 0;
     }
+
+    toArray() {
+        return [this.x, this.y];
+    }
+}
+
+Point.fromArray = function(array) {
+    return new Point(array[0], array[1]);
 }
 
 class Color {
@@ -184,6 +201,10 @@ class Color {
         this.r = r? r:0;
         this.g = g? g:0;
         this.b = b? b:0;
+    }
+
+    toArray() {
+        return [this.r, this.g, this.b];
     }
 
     randomise(scale) {
@@ -213,20 +234,49 @@ Color.random = function() {
     return new Color(128, 128, 128).randomise(50);
 }
 
+Color.fromArray = function(array) {
+    return new Color(array[0], array[1], array[2]);
+}
+
 class LowPolyGenerator {
     constructor(canvas, scale) {
         this.canvas = canvas;
+        this.canvas.parentNode.style.backgroundColor = 'black';
         this.scale = scale;
 
-        this.canvas.width = window.innerWidth * this.scale;
-        this.canvas.height = window.innerHeight * this.scale;
+        this.polygons = [];
+
+        this.alertNode = genAlertNode();
+        this.alertTransition = null;
+
+        this.load = getParameterByName('load');
+        if (this.load != null) {
+            this.load = parseInt(this.load);
+
+            this.loadFromLocalstorage();
+        } else {
+            this.load = this.getExisting().length;
+
+            var size = getParameterByName('size');
+            size = size == null? null:size.split(',');
+
+            this.width = size == null? window.innerWidth:parseInt(size[0]),
+            this.height = size == null? window.innerHeight:parseInt(size[1]);
+        }
+
+        this.displayScale = Math.min(window.innerHeight / this.height, window.innerWidth / this.width);
+
+        this.canvas.style.width = (this.width * this.displayScale) + 'px';
+        this.canvas.style.height = (this.height * this.displayScale) + 'px';
+
+        this.canvas.width = this.width * this.scale;
+        this.canvas.height = this.height * this.scale;
 
         this.ctx = canvas.getContext('2d');
 
         this.colorRandomisation = 30;
         this.color = Color.random();
 
-        this.polygons = [];
         this.polygonInProgress = new SemiPolygon(this.color.randomise(this.colorRandomisation));
 
         this.pointLocked = false;
@@ -285,17 +335,21 @@ class LowPolyGenerator {
                 this.polygonInProgress = new SemiPolygon(this.color.randomise(this.colorRandomisation));
                 this.render();
                 this.alert('Deleted half-done polygon');
+
+                this.save();
             }
 
             if (event.keyCode == 8) {
                 if (this.polygons.length == 0) {
-                    this.alert('<span style="color: #E74C3C">Error:</span> No polygons to delete!');
+                    this.alert('<span style="color: #E74C3C">Error:</span> No polygons to delete!', 3000);
                     return;
                 }
 
                 this.polygons.splice(this.polygons.length - 1, 1);
                 this.render();
                 this.alert('Deleted last polygon');
+
+                this.save();
             }
             
             if (event.keyCode == 65) {
@@ -313,7 +367,7 @@ class LowPolyGenerator {
             }
 
             if (event.keyCode == 69) {
-                this.alert('Exporting to image...');
+                this.alert('Exporting to image...', 3000);
 
                 const pointLocked = this.pointLocked;
 
@@ -325,6 +379,20 @@ class LowPolyGenerator {
                 download(this.canvas.toDataURL('image/png'), 'image/png', 'Polyfiller export');
 
                 this.pointLocked = pointLocked;
+            }
+
+            if (event.keyCode == 76) {
+                this.delete();
+            }
+
+            if (event.keyCode == 73) {
+                this.alert('Size: <b>' + this.width + 'px</b> * <b>' + this.height + 'px</b>' + 
+                            '<br />Load index: <b>' + this.load + '</b>' + 
+                            '<br />Polygons: <b>' + this.polygons.length + '</b>' + 
+                            '<br />Active color: <b>' + this.color.toString() + '</b>' + 
+                            '<br />Color randomisation degree: <b>' + this.colorRandomisation + '</b>',
+                            7500
+                );
             }
         });
 
@@ -345,6 +413,7 @@ class LowPolyGenerator {
                     if (polygon.intersects(point)) {
                         this.polygons.splice(i, 1);
                         this.render();
+                        this.save();
                         return;
                     }
                 }
@@ -358,7 +427,7 @@ class LowPolyGenerator {
                     }
                 }
                 
-
+                this.save();
                 return;
             }
 
@@ -366,6 +435,7 @@ class LowPolyGenerator {
                 for (const existingPoint of this.getAllPoints()) {
                     if (existingPoint.distanceTo(point) <= this.lockDistance) {
                         point.moveTo(existingPoint);
+                        this.save();
                         break;
                     }
                 }
@@ -378,8 +448,9 @@ class LowPolyGenerator {
                 this.polygonInProgress = new SemiPolygon(this.color.randomise(this.colorRandomisation));
             }
 
+            this.save();
             this.render();
-        });
+        }, this.canvas);
 
         this.addEventListener('mousemove', function(event) {
             const point = this.convertPoint(event);
@@ -388,17 +459,15 @@ class LowPolyGenerator {
                 for (const secondPoint of this.movingPoints) {
                     secondPoint.moveTo(point);
                 }
+                this.save();
             } else this.polygonInProgress.mouseMove(point);
 
             this.render();
-        });
+        }, this.canvas);
 
         this.addEventListener('mouseup', function(event) {
             if (this.moving) this.movingPoints = [];
-        });
-
-        this.alertNode = genAlertNode();
-        this.alertTransition = null;
+        }, this.canvas);
 
         this.colorPicker = genColorPicker();
         this.addEventListener('input', function() {
@@ -407,14 +476,80 @@ class LowPolyGenerator {
             this.render();
         }, this.colorPicker);
 
-        this.alert('Loaded! Canvas size: ' + canvas.width + 'px * ' + canvas.height + 'px');
+        this.render();
+        this.alert('Loaded! Canvas size: ' + this.width + 'px * ' + this.height + 'px, saving to ' + this.load + (this.width * this.height > 25000000? '<br /><span style="color: #E67E22">Warning:</span> Large canvas detected':''));
 
         if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            this.alert('<span style="color: #E67E22">Warning:</span> Mobile device detected, this app will not work on mobile');
+            this.alert('<span style="color: #E67E22">Warning:</span> Mobile device detected, this app will not work on mobile', 10000);
+        }
+
+        this.canvas.parentNode.style.backgroundColor = 'white';
+    }
+
+    getExisting() {
+        return JSON.parse(localStorage.creations == null? '[]':localStorage.creations);
+    }
+
+    delete() {
+        if (confirm('Are you sure you want to delete this?')) {
+            const existing = this.getExisting();
+
+            existing[this.load] = null;
+
+            localStorage.creations = JSON.stringify(existing);
+            window.location.replace('app.html');
         }
     }
 
-    alert(text) {
+    save() {
+        const existing = this.getExisting();
+        
+        const current = {
+            size: [this.width, this.height],
+            polygons: []
+        };
+
+        for (const polygon of this.polygons) {
+            const data = [polygon.color.toArray(), []];
+            for (const point of polygon.points) {
+                data[1].push(point.toArray());
+            }
+            current.polygons.push(data);
+        }
+
+        if (existing.length < this.load) {
+            existing.push(current);
+        } else {
+            existing[this.load] = current;
+        }
+
+        localStorage.creations = JSON.stringify(existing);
+    }
+
+    loadFromLocalstorage() {
+        const existing = this.getExisting();
+        const toLoad = existing[this.load];
+
+        if (toLoad == null) {
+            this.alert('<span style="color: #E74C3C">Error:</span> No save at this position!', 10000);
+            throw new Error('No save.');
+        }
+
+        this.width = toLoad.size[0];
+        this.height = toLoad.size[1];
+
+        for (const polygon of toLoad.polygons) {
+            const created = new Polygon(Color.fromArray(polygon[0]));
+
+            for (const point of polygon[1]) {
+                created.points.push(Point.fromArray(point));
+            }
+
+            this.polygons.push(created);
+        }
+    }
+
+    alert(text, time) {
         this.alertNode.innerHTML = text;
         this.alertNode.style.opacity = '1';
 
@@ -425,7 +560,7 @@ class LowPolyGenerator {
         const self = this;
         this.alertTransition = setTimeout(function() {
             self.alertNode.style.opacity = '0';
-        }, 1500);
+        }, time == null? 1500:time);
     }
 
     render() {
@@ -449,7 +584,7 @@ class LowPolyGenerator {
     }
 
     convertPoint(event) {
-        return new Point(event.clientX * this.scale, event.clientY * this.scale);
+        return new Point((event.offsetX * this.scale) / this.displayScale, (event.offsetY * this.scale) / this.displayScale);
     }
 
     addEventListener(type, callback, element) {

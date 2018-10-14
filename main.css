@@ -27,4 +27,10 @@ code {
 
 ol {
     padding-left: 0;
+    list-style: none;
+}
+
+li::before {
+    font-family: monospace;
+    content: '• ';
 }
