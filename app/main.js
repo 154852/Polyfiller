@@ -24,6 +24,32 @@ function genAlertNode() {
     return element;
 }
 
+function genLargeAlertNode() {
+    const element = document.createElement('h1');
+    element.innerHTML = '';
+
+    element.style.display = 'inline-block';
+    element.style.position = 'fixed';
+    element.style.bottom = '0';
+    element.style.right = '0';
+    element.style.backgroundColor = 'rgba(0.8, 0.8, 0.8, 0.7)';
+    element.style.borderRadius = '0.5em';
+    element.style.color = 'white';
+    element.style.fontFamily = 'sans-serif';
+    element.style.fontWeight = '100';
+    element.style.padding = '0.5em 0.85em';
+    element.style.margin = '0.5em';
+    element.style.fontSize = '100%';
+    element.style.transition = 'opacity 0.7s';
+    element.style.webkitTransition = element.style.transition;
+    element.style.userSelect = 'none';
+
+    element.style.opacity = '0';
+
+    document.body.appendChild(element);
+    return element;
+}
+
 function genColorPicker() {
     const node = document.createElement('input');
     node.setAttribute('type', 'color');
@@ -250,6 +276,9 @@ class LowPolyGenerator {
         this.alertNode = genAlertNode();
         this.alertTransition = null;
 
+        this.largeAlertNode = genLargeAlertNode();
+        this.largeAlertTransition = null;
+
         this.load = getParameterByName('load');
         if (this.load != null) {
             this.load = parseInt(this.load);
@@ -291,9 +320,14 @@ class LowPolyGenerator {
         this.insertMode = false;
         this.recolorMode = false;
 
+        this.tooltips = true;
+        this.keyTooltips = false;
+
         this.sides = 3;
         
         this.addEventListener('keydown', function(event) {
+            this.largeAlert('Key Down: <b>' + event.key.toUpperCase() + '</b>', 500);
+
             if (event.keyCode == 81) { 
                 this.pointLocked = !this.pointLocked;
                 this.alert((this.pointLocked? 'Enabled':'Disabled') + ' point locking');
@@ -424,27 +458,48 @@ class LowPolyGenerator {
 
                 this.alert('Set sides count to ' + this.sides);
             }
+
+            if (event.keyCode == 89) { 
+                this.tooltips = !this.tooltips;
+                this.alert((this.tooltips? 'Enabled':'Disabled') + ' tooltips');
+                
+                return;
+            }
+
+            if (event.keyCode == 85) { 
+                this.keyTooltips = !this.keyTooltips;
+                this.alert((this.keyTooltips? 'Enabled':'Disabled') + 'key tooltips');
+                
+                return;
+            }
         });
 
         this.addEventListener('keyup', function(event) {
             if (event.keyCode == 16) {
+                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>', 1000);
                 this.alert('Click to delete disabled');
 
                 this.deleteMode = false;
             }
 
             if (event.keyCode == 9) {
+                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>', 1000);
+
                 this.insertMode = false;
                 this.alert('Click to insert point disabled');
             }
 
             if (event.keyCode == 82) {
+                this.largeAlert('Key Up: <b>' + event.key.toUpperCase() + '</b>', 1000);
+
                 this.recolorMode = false;
                 this.alert('Click to re-color disabled');
             }
         });
 
         this.addEventListener('mousedown', function(event) {
+            this.largeAlert('Mouse Down: <b>' + event.button + '</b>', 500);
+
             const point = this.convertPoint(event);
 
             if (this.recolorMode) {
@@ -539,7 +594,7 @@ class LowPolyGenerator {
 
         this.addEventListener('contextmenu', function(event) {
             event.preventDefault();
-        })
+        });
 
         this.addEventListener('mousemove', function(event) {
             const point = this.convertPoint(event);
@@ -639,6 +694,8 @@ class LowPolyGenerator {
     }
 
     alert(text, time) {
+        if (!this.tooltips) return;
+
         this.alertNode.innerHTML = text;
         this.alertNode.style.opacity = '1';
 
@@ -649,6 +706,22 @@ class LowPolyGenerator {
         const self = this;
         this.alertTransition = setTimeout(function() {
             self.alertNode.style.opacity = '0';
+        }, time == null? 1500:time);
+    }
+
+    largeAlert(text, time) {
+        if (!this.keyTooltips) return;
+
+        this.largeAlertNode.innerHTML = text;
+        this.largeAlertNode.style.opacity = '1';
+
+        if (this.largeAlertTransition != null) {
+            window.clearTimeout(this.largeAlertTransition);
+        }
+
+        const self = this;
+        this.largeAlertTransition = setTimeout(function() {
+            self.largeAlertNode.style.opacity = '0';
         }, time == null? 1500:time);
     }
 
