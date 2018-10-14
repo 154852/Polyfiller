@@ -235,6 +235,29 @@ Color.fromArray = function(array) {
     return new Color(array[0], array[1], array[2]);
 }
 
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+class Animation {
+    constructor(polygons) {
+        this.polygons = polygons;
+        this.speed = 50;
+    }
+
+    async show(ctx, width, height) {
+        ctx.clearRect(0, 0, width, height);
+
+        for (var i = 0; i < this.polygons.length; i++) {
+            for (var j = 0; j < i + 1; j++) {
+                this.polygons[j].render(ctx);
+            }
+
+            await sleep(this.speed);
+        }
+    }
+}
+
 class LowPolyGenerator {
     constructor(canvas, scale) {
         this.canvas = canvas;
@@ -448,6 +471,10 @@ class LowPolyGenerator {
                 
                 return;
             }
+
+            if (event.keyCode == 75) {
+                this.genAnimation().show(this.ctx, this.canvas.width, this.canvas.height);
+            }
         });
 
         this.addEventListener('keyup', function(event) {
@@ -604,6 +631,10 @@ class LowPolyGenerator {
         }
 
         this.canvas.parentNode.style.backgroundColor = 'white';
+    }
+
+    genAnimation() {
+        return new Animation(this.polygons);
     }
 
     getExisting() {
