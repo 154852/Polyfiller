@@ -1,22 +1,7 @@
 function genAlertNode() {
     const element = document.createElement('p');
+    element.classList.add('alert-node');
     element.innerHTML = '';
-
-    element.style.display = 'inline-block';
-    element.style.position = 'fixed';
-    element.style.top = '0';
-    element.style.right = '0';
-    element.style.backgroundColor = 'rgba(0.8, 0.8, 0.8, 0.7)';
-    element.style.borderRadius = '0.5em';
-    element.style.color = 'white';
-    element.style.fontFamily = 'sans-serif';
-    element.style.fontWeight = '100';
-    element.style.padding = '0.5em 1em';
-    element.style.margin = '0.5em';
-    element.style.fontSize = '80%';
-    element.style.transition = 'opacity 0.7s';
-    element.style.webkitTransition = element.style.transition;
-    element.style.userSelect = 'none';
 
     element.style.opacity = '0';
 
@@ -26,23 +11,8 @@ function genAlertNode() {
 
 function genLargeAlertNode() {
     const element = document.createElement('h1');
+    element.classList.add('large-alert-node');
     element.innerHTML = '';
-
-    element.style.display = 'inline-block';
-    element.style.position = 'fixed';
-    element.style.bottom = '0';
-    element.style.right = '0';
-    element.style.backgroundColor = 'rgba(0.8, 0.8, 0.8, 0.7)';
-    element.style.borderRadius = '0.5em';
-    element.style.color = 'white';
-    element.style.fontFamily = 'sans-serif';
-    element.style.fontWeight = '100';
-    element.style.padding = '0.5em 0.85em';
-    element.style.margin = '0.5em';
-    element.style.fontSize = '100%';
-    element.style.transition = 'opacity 0.7s';
-    element.style.webkitTransition = element.style.transition;
-    element.style.userSelect = 'none';
 
     element.style.opacity = '0';
 
@@ -474,7 +444,7 @@ class LowPolyGenerator {
 
             if (event.keyCode == 85) { 
                 this.keyTooltips = !this.keyTooltips;
-                this.alert((this.keyTooltips? 'Enabled':'Disabled') + 'key tooltips');
+                this.alert((this.keyTooltips? 'Enabled':'Disabled') + ' key tooltips');
                 
                 return;
             }
