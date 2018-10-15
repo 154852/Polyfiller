@@ -41,204 +41,6 @@ function toHex(number) {
     return string;
 }
 
-function download(data, type, name) {
-    var dlLink = document.createElement('a');
-    dlLink.download = name;
-    dlLink.href = data;
-    dlLink.dataset.downloadurl = [type, dlLink.download, dlLink.href].join(':');
-
-    document.body.appendChild(dlLink);
-    dlLink.click();
-    document.body.removeChild(dlLink);
-}
-
-function getParameterByName(name) {
-	name = name.replace(/[\[\]]/g, "\\$&");
-	var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
- 	results = regex.exec(window.location.href);
-	if (!results) return null;
-	if (!results[2]) return '';
-	return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
-
-class Polygon {
-    constructor(color, points) {
-        this.color = color;
-        this.points = points == null? []:points;
-    }
-
-    nextPoint(position) {
-        this.points.push(position);
-    }
-
-    isTriangle() {
-        return this.points.length == 3;
-    }
-
-    isEmpty() {
-        return this.points.length == 0;
-    }
-
-    render(ctx) {
-        if (this.isEmpty()) return;
-
-        ctx.fillStyle = this.color.toString();
-        ctx.strokeStyle = this.color.toString();
-        ctx.lineWidth = 1;
-
-        ctx.beginPath();
-
-        ctx.moveTo(this.points[0].x, this.points[0].y);
-        for (var i = 1; i < this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y);
-
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-    }
-
-    intersects(point) {
-        var x = point.x, y = point.y;
-
-        var inside = false;
-        for (var i = 0, j = this.points.length - 1; i < this.points.length; j = i++) {
-            var xi = this.points[i].x, yi = this.points[i].y;
-            var xj = this.points[j].x, yj = this.points[j].y;
-
-            var intersect = ((yi > y) != (yj > y))
-                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-            if (intersect) inside = !inside;
-        }
-
-        return inside;
-    }
-}
-
-class SemiPolygon extends Polygon {
-    constructor(color) {
-        super(color);
-
-        this.tempPoint = {x: 0, y: 0};
-    }
-
-    mouseMove(point) {
-        this.tempPoint = point;
-    }
-
-    toPolygon() {
-        return new Polygon(this.color, this.points);
-    }
-
-    render(ctx) {
-        if (this.isEmpty()) return;
-
-        ctx.fillStyle = this.color.toString();
-        ctx.strokeStyle = this.color.toString();
-        ctx.lineWidth = 1;
-        
-        ctx.beginPath();
-
-        ctx.moveTo(this.points[0].x, this.points[0].y);
-        for (var i = 1; i < this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y);
-
-        if (!this.tempPoint.isOrigin()) ctx.lineTo(this.tempPoint.x, this.tempPoint.y);
-
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-    }
-}
-
-class Point {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    distanceTo(point2) {
-        return Math.sqrt(((point2.x - this.x) ** 2) + ((point2.y - this.y) ** 2));
-    }
-
-    moveTo(point) {
-        this.x = point.x;
-        this.y = point.y;
-    }
-
-    renderCross(ctx, size) {
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 2;
-
-        ctx.beginPath();
-        ctx.moveTo(this.x - size, this.y - size);
-        ctx.lineTo(this.x + size, this.y + size);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(this.x + size, this.y - size);
-        ctx.lineTo(this.x - size, this.y + size);
-        ctx.closePath();
-        ctx.stroke();
-    }
-
-    isOrigin() {
-        return this.x == 0 && this.y == 0;
-    }
-
-    toArray() {
-        return [this.x, this.y];
-    }
-}
-
-Point.fromArray = function(array) {
-    return new Point(array[0], array[1]);
-}
-
-class Color {
-    constructor(r, g, b) {
-        this.r = r? r:0;
-        this.g = g? g:0;
-        this.b = b? b:0;
-    }
-
-    toArray() {
-        return [this.r, this.g, this.b];
-    }
-
-    randomise(scale) {
-        const color = new Color(this.r, this.g, this.b);
-
-        color.r += parseInt((Math.random() * scale) - (scale / 2));
-        color.g += parseInt((Math.random() * scale) - (scale / 2));
-        color.b += parseInt((Math.random() * scale) - (scale / 2));
-
-        return color;
-    }
-
-    toString(hex) {
-        if (hex) {
-            return '#' + toHex(this.r) + toHex(this.g) + toHex(this.b);
-        }
-        return 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')';
-    }
-}
-
-Color.fromHex = function(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result? new Color(parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)): null;
-}
-
-Color.random = function() {
-    return new Color(128, 128, 128).randomise(50);
-}
-
-Color.fromArray = function(array) {
-    return new Color(array[0], array[1], array[2]);
-}
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 class Animation {
     constructor(polygons, speed, endCallback) {
         this.polygons = polygons;
@@ -281,7 +83,7 @@ class LowPolyGenerator {
 
             this.loadFromLocalstorage();
         } else {
-            this.load = this.getExisting().length;
+            this.load = APP.getExisting().length;
 
             var size = getParameterByName('size');
             size = size == null? null:size.split(',');
@@ -413,7 +215,7 @@ class LowPolyGenerator {
 
                 this.render();
 
-                download(this.canvas.toDataURL('image/png'), 'image/png', 'Polyfiller export');
+                APP.download(this.canvas);
 
                 this.pointLocked = pointLocked;
             }
@@ -665,48 +467,19 @@ class LowPolyGenerator {
         });
     }
 
-    getExisting() {
-        return JSON.parse(localStorage.creations == null? '[]':localStorage.creations);
-    }
-
     delete() {
         if (confirm('Are you sure you want to delete this?')) {
-            const existing = this.getExisting();
-
-            existing[this.load] = null;
-
-            localStorage.creations = JSON.stringify(existing);
-            window.location.replace('app.html');
+            APP.delete(this.load);
+            window.location.replace('../gallery/gallery.html');
         }
     }
 
     save() {
-        const existing = this.getExisting();
-        
-        const current = {
-            size: [this.width, this.height],
-            polygons: []
-        };
-
-        for (const polygon of this.polygons) {
-            const data = [polygon.color.toArray(), []];
-            for (const point of polygon.points) {
-                data[1].push(point.toArray());
-            }
-            current.polygons.push(data);
-        }
-
-        if (existing.length < this.load) {
-            existing.push(current);
-        } else {
-            existing[this.load] = current;
-        }
-
-        localStorage.creations = JSON.stringify(existing);
+        APP.save(this, this.load);
     }
 
     loadFromLocalstorage() {
-        const existing = this.getExisting();
+        const existing = APP.getExisting();
         const toLoad = existing[this.load];
 
         if (toLoad == null) {
@@ -714,18 +487,11 @@ class LowPolyGenerator {
             throw new Error('No save.');
         }
 
-        this.width = toLoad.size[0];
-        this.height = toLoad.size[1];
+        const data = APP.loadJSON(toLoad);
 
-        for (const polygon of toLoad.polygons) {
-            const created = new Polygon(Color.fromArray(polygon[0]));
-
-            for (const point of polygon[1]) {
-                created.points.push(Point.fromArray(point));
-            }
-
-            this.polygons.push(created);
-        }
+        this.width = data.width;
+        this.height = data.height;
+        this.polygons = data.polygons;
     }
 
     alert(text, time) {
