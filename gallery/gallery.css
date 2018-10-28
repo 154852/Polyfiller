@@ -148,10 +148,21 @@ body {
     margin-left: 3em;
 }
 
-.fixed-top {
+.fixed-top-left {
     position: fixed;
     top: 1em;
     left: 1em;
+
+    display: inline;
+    width: auto;
+
+    z-index: 1000;
+}
+
+.fixed-top-right {
+    position: fixed;
+    top: 1em;
+    right: 1em;
 
     display: inline;
     width: auto;
