@@ -128,9 +128,28 @@ class LowPolyGenerator {
 
         this.animation = false;
         this.animationSpeed = 40;
+
+        this.imageShown = false;
         
         this.addEventListener('keydown', function(event) {
             this.largeAlert('Key Down: <b>' + event.key.toUpperCase() + '</b>');
+
+            if (event.keyCode == 191) {
+                this.imageShown = !this.imageShown;
+                this.alert('Image ' + (this.imageShown? 'shown':'hidden'));
+                this.canvas.parentElement.style.backgroundPositionX = this.imageShown? '':'100000%';
+
+                return;
+            }
+
+            if (event.keyCode == 84) {
+                console.log(this.canvas.parentElement)
+                this.canvas.parentElement.style.backgroundImage = 'url(' + prompt('Please give an image path...') + ')';
+                this.alert('Loading image...');
+                this.imageShown = true;
+
+                return;
+            }
 
             if (event.keyCode == 71) { 
                 this.gridLock = !this.gridLock;
@@ -577,7 +596,7 @@ class LowPolyGenerator {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.gridLock) {
-            this.ctx.strokeStyle = 'rgba(0.9, 0.9, 0.9, 0.2)';
+            this.ctx.strokeStyle = 'rgba(0.9, 0.9, 0.9, 0.3)';
 
             for (var i = 0; i < this.canvas.height; i += this.gridSize) {
                 this.ctx.beginPath();
