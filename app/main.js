@@ -136,7 +136,7 @@ class LowPolyGenerator {
 
             if (event.keyCode == 191) {
                 this.imageShown = !this.imageShown;
-                this.alert('Image ' + (this.imageShown? 'shown':'hidden'));
+                this.alert('Image ' + (!this.imageShown? 'shown':'hidden'));
                 this.canvas.parentElement.style.backgroundPositionX = this.imageShown? '':'100000%';
 
                 return;
