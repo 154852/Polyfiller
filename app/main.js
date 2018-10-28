@@ -121,6 +121,9 @@ class LowPolyGenerator {
         this.tooltips = true;
         this.keyTooltips = false;
 
+        this.gridLock = false;
+        this.gridSize = 40;
+
         this.sides = 3;
 
         this.animation = false;
@@ -128,6 +131,38 @@ class LowPolyGenerator {
         
         this.addEventListener('keydown', function(event) {
             this.largeAlert('Key Down: <b>' + event.key.toUpperCase() + '</b>');
+
+            if (event.keyCode == 71) { 
+                this.gridLock = !this.gridLock;
+                this.alert((this.gridLock? 'Enabled':'Disabled') + ' grid lock');
+
+                this.render();
+
+                return;
+            }
+
+            if (event.keyCode == 53) { 
+                event.preventDefault();
+
+                this.gridSize = Math.max(this.gridSize - 5, 5);
+                this.alert('Set grid gap to ' + this.gridSize);
+
+                this.render();
+
+                return;
+            }
+
+            if (event.keyCode == 54) { 
+                event.preventDefault();
+
+                this.gridSize = Math.min(this.gridSize + 5, 100);
+                this.alert('Set grid gap to ' + this.gridSize);
+
+                this.render();
+
+                return;
+            }
+
 
             if (event.keyCode == 81) { 
                 this.pointLocked = !this.pointLocked;
@@ -326,6 +361,11 @@ class LowPolyGenerator {
 
             const point = this.convertPoint(event);
 
+            if (this.gridLock) {
+                point.x = Math.round(point.x / this.gridSize) * this.gridSize;
+                point.y = Math.round(point.y / this.gridSize) * this.gridSize;
+            }
+
             if (this.recolorMode) {
                 for (var i = this.polygons.length - 1; i >= 0; i--) {
                     const polygon = this.polygons[i];
@@ -422,6 +462,11 @@ class LowPolyGenerator {
 
         this.addEventListener('mousemove', function(event) {
             const point = this.convertPoint(event);
+
+            if (this.gridLock) {
+                point.x = Math.round(point.x / this.gridSize) * this.gridSize;
+                point.y = Math.round(point.y / this.gridSize) * this.gridSize;
+            }
 
             if (this.moving) {
                 for (const secondPoint of this.movingPoints) {
@@ -530,6 +575,24 @@ class LowPolyGenerator {
         if (this.animation) return;
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.gridLock) {
+            this.ctx.strokeStyle = 'rgba(0.9, 0.9, 0.9, 0.2)';
+
+            for (var i = 0; i < this.canvas.height; i += this.gridSize) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, i);
+                this.ctx.lineTo(this.canvas.width, i);
+                this.ctx.stroke();
+            }
+
+            for (var i = 0; i < this.canvas.width; i += this.gridSize) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(i, 0);
+                this.ctx.lineTo(i, this.canvas.height);
+                this.ctx.stroke();
+            }
+        }
 
         for (const polygon of this.polygons) polygon.render(this.ctx);
 
